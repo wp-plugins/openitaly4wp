@@ -95,6 +95,7 @@ function openitaly4wp_widget($args) {
     $provincia = get_option('openitaly4wp_provincia');
     $regione = get_option('openitaly4wp_regione');
     $username = get_option('openitaly4wp_username');
+    $password = get_option('openitaly4wp_password');
     $show = get_option('openitaly4wp_show');
     $results = get_option('openitaly4wp_results');
 
@@ -115,23 +116,11 @@ function openitaly4wp_widget($args) {
 
     $client = new IXR_Client('http://www.openitaly.net/xmlrpc');
     $client->debug = false;
-    if($client->query('oi.getInfo', '','openitaly4wp','0.0.2')) {
+    if($client->query('oi.getInfo', '','openitaly4wp','0.0.2',get_option('blogname'))) {
 	$xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
 	$sessId = (string)$xmlData->id;
     }
     // Adesso esegui la query a seconda di cosa visualizzare...
-    if($show == 'random') {
-	if($client->query('oi.doSearch',$sessId,$query[0],$query[1],$query[2],$query[3],$query[4])) {
-	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
-	    if($xmlData) {
-		foreach($xmlData->entry as $xmlItem) {
-		    openitaly4wp_itemdiv($xmlItem);
-		}
-	    }
-	} else {
-	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
-	}
-    }   
     if($show == 'topten') {
 	if($client->query('oi.getTopTen',$sessId)) {
 	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
@@ -144,8 +133,7 @@ function openitaly4wp_widget($args) {
 	} else {
 	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
 	}
-    }
-    if($show == 'lastadd') {
+    } else if($show == 'lastadd') {
 	if($type == 'EVENT') {
 	    $query = $client->query('oi.getLastEvt',$sessId);
 	} else {
@@ -161,10 +149,41 @@ function openitaly4wp_widget($args) {
 	} else {
 	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
 	}
-    }
-    if($show == 'bookmark') {
-	// TODO: Login and show data
-    }
+    } else if($show == 'bookmark') {
+	// Login and show data
+	$query = $client->query('oi.doLogin',$sessId,$username,$password);
+	if($query) {
+	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
+	    if(($xmlData)&&(intval((string)$xmlData->code) == 201)) {
+		// Now retrieve preferred
+		$query = $client->query('oi.getBookmarks',$sessId);
+		if($query) {
+	    	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
+		    foreach($xmlData->entry as $xmlItem) {
+			openitaly4wp_itemdiv($xmlItem);
+		    }
+		} else {
+		    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
+		}
+	    } else {
+		print "Errore autenticazione";
+	    }	
+	} else {
+	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
+	}
+    } else {
+	if($client->query('oi.doSearch',$sessId,$query[0],$query[1],$query[2],$query[3],$query[4])) {
+	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
+	    if($xmlData) {
+		foreach($xmlData->entry as $xmlItem) {
+		    openitaly4wp_itemdiv($xmlItem);
+		}
+	    }
+	} else {
+	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
+	}
+    }   
+
     echo "<div style='padding:2px; text-align: center;'><small><a href='http://www.openitaly.net/wp'><b>Openitaly4WP</b></a> v0.0.1 - Powered by <a href='http://www.openitaly.net' target=_new><img src='".openitaly4wp_path("img/iconLogo.png")."' style='vertical-align: middle; border: 0px;'>&nbsp;Openitaly.net</a></small></div>";
 }
     
@@ -268,10 +287,8 @@ function openitaly4wp_plugin_options() {
 	<option value='bookmark' ".isSelected($openitaly4wp_show,"bookmark").">I miei preferiti</option>
     </select></p>";
     
-    echo "<hr /><p>Nome utente dell'account di openitaly.net: inseriscilo solamente se vuoi far vedere le tue risorse preferite.</p>
-    <p>Username: <input type=\"text\" size=\"16\" name=\"openitaly4wp_username\" value=\"$openitaly4wp_username\" /></p>";
-    
-    echo "<hr /><p>Password dell'account suddetto. Necessaria solamente per visualizzare le risorse preferite dell'utente.</p>
+    echo "<hr /><p>Nome utente e password dell'account di openitaly.net: necessarie solamente se vuoi far vedere le tue risorse preferite.</p>
+    <p>Username: <input type=\"text\" size=\"16\" name=\"openitaly4wp_username\" value=\"$openitaly4wp_username\" /></p>
     <p>Password:<input type=\"password\" size=\"16\" name=\"openitaly4wp_password\" value=\"$openitaly4wp_password\" /></p>";
 
     if(strlen($openitaly4wp_username) < 1) {
