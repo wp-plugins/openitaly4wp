@@ -1,0 +1,25 @@
+=== openitaly4wp ===
+Contributors: o-zone
+Tags: openitaly, touristic, italian, italy, restaurants, hotel, travels,
+Stable tag: trunk
+Requires at least: 2.0
+Tested up to: 2.8.2
+
+openitaly4wp show a widget with Italian touristic resources.
+
+== Description ==
+
+Openitaly4WP use XML-RPC interface provided by Openitaly.net to retrieve a list of suggested/popular/random 
+resources by an user or in a configured place of Italy. Administration interface let the admin of a WP blog to configure 
+widget behaviour.
+
+== Installation ==
+
+Upload the Openitaly4WB plugin to your blog, Activate it, then add Openitaly4WP Widget wherever you want. After all, go to Settings->openitaly4wp 
+administration page and configure it !
+
+== Changelog ==
+
+= 0.0.1 =
+
+* First release
