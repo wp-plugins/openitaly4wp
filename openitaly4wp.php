@@ -2,14 +2,14 @@
 /**
  * @package OpenItaly4WP
  * @author Michele Pinassi
- * @version 0.0.2
+ * @version 0.0.3
  */
 /*
 Plugin Name: Openitaly4WP
 Plugin URI: http://www.openitaly.net/wp
-Description: his plugin allows to display latest, preferred, localized resources from OpenItaly.net
+Description: This plugin allows to display latest, preferred, localized resources from OpenItaly.net
 Author: Michele Pinassi
-Version: 0.0.2
+Version: 0.0.3
 Author URI: http://www.zerozone.it
 */
 
@@ -48,14 +48,22 @@ add_option("openitaly4wp_provincia", '', '', 'yes');
 add_option("openitaly4wp_comune", '', '', 'yes');
 add_option("openitaly4wp_type", '', '', 'yes');
 add_option("openitaly4wp_show", 'random', '', 'yes');
-add_option("openitaly4wp_title", 'Alcune risorse in {COMUNE}', '', 'yes');
+add_option("openitaly4wp_title", 'Alcune risorse in %COMUNE%', '', 'yes');
 add_option("openitaly4wp_results", '5', '', 'yes');
+add_option("openitaly4wp_css", '', '', 'yes');
 
 add_action('admin_menu', 'openitaly4wp_plugin_menu');
 add_action('plugins_loaded', 'openitaly4wp_widget_init');
+// WP Actions  
+if(get_option('openitaly4wp_css') == "1")   
+    add_action('wp_head','openitaly4wp_css');
 
 function openitaly4wp_widget_init() {
   register_sidebar_widget('openitaly4wp', 'openitaly4wp_widget');
+}
+
+function openitaly4wp_css() {
+    echo '<link type="text/css" rel="stylesheet" href="' . get_bloginfo('wpurl') .'/wp-content/plugins/openitaly4wp/openitaly4wp.css" />' . "\n";
 }
 
 function openitaly4wp_path($file=null) {
@@ -69,7 +77,7 @@ function openitaly4wp_plugin_menu() {
 }
 
 function openitaly4wp_itemdiv($xmlItem) {
-    echo "<div style='padding: 2px;'>";
+    echo "<div style='openitaly4wp-item'>";
     if($xmlItem->class == "EVENT") {    
         echo "<img src='".openitaly4wp_path("img/iconEvent.png")."' style='width:12px; height:12px; vertical-align: middle;'>";
     } else if($xmlItem->class == "GENERAL") {   
@@ -77,7 +85,10 @@ function openitaly4wp_itemdiv($xmlItem) {
     } else {   
 	echo "<img src='".openitaly4wp_path("img/iconResource.png")."' style='width:12px; height:12px; vertical-align: middle;'>";
     }
-    echo "<a href='http://www.openitaly.net/entry/".getEntryURL($xmlItem->title,$xmlItem->comune)."' target=_new>".$xmlItem->title."</a><br><em>".$xmlItem->address.", ";
+    echo "<a href='http://www.openitaly.net/entry/".getEntryURL($xmlItem->title,$xmlItem->comune)."' target=_new>".$xmlItem->title."</a><br><em>";
+    if(strlen($xmlItem->address) > 0) {
+	echo $xmlItem->address.", ";
+    }
     if(strcmp($xmlItem->comune,$xmlItem->provincia) == 0) {
 	echo $xmlItem->comune.", ";
     } else {    
@@ -101,7 +112,9 @@ function openitaly4wp_widget($args) {
 
     $title = str_ireplace(array('%COMUNE%','%PROVINCIA%','%REGIONE%','%USERNAME%'),array($comune,$provincia,$regione,$username),$title);
 
-    echo "<div class=\"sidebar-box\"><h3>$title</h3></div>";
+    echo "<div class='openitaly4wp-box'><!-- BOX -->";
+
+    echo "<div class='openitaly4wp-title'>$title</div>";
 
     $query[] = "regione:$regione";
     if(strlen($provincia) > 0) {
@@ -114,9 +127,11 @@ function openitaly4wp_widget($args) {
     $query[] = "maxres:$results";
     $sessId = "";
 
+    error_reporting(E_ERROR | E_PARSE);
+    
     $client = new IXR_Client('http://www.openitaly.net/xmlrpc');
     $client->debug = false;
-    if($client->query('oi.getInfo', '','openitaly4wp','0.0.2',get_option('blogname'))) {
+    if($client->query('oi.getInfo', '','openitaly4wp','0.0.3',get_option('blogname'))) {
 	$xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
 	$sessId = (string)$xmlData->id;
     }
@@ -183,8 +198,10 @@ function openitaly4wp_widget($args) {
 	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
 	}
     }   
+    error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
-    echo "<div style='padding:2px; text-align: center;'><small><a href='http://www.openitaly.net/wp'><b>Openitaly4WP</b></a> v0.0.1 - Powered by <a href='http://www.openitaly.net' target=_new><img src='".openitaly4wp_path("img/iconLogo.png")."' style='vertical-align: middle; border: 0px;'>&nbsp;Openitaly.net</a></small></div>";
+    echo "<div style='openitaly4wp-footer'><small><a href='http://www.openitaly.net/wp'><b>Openitaly4WP</b></a> v0.0.1 - Powered by <a href='http://www.openitaly.net' target=_new><img src='".openitaly4wp_path("img/iconLogo.png")."' style='vertical-align: middle; border: 0px;'>&nbsp;Openitaly.net</a></small></div>";
+    echo "</div><!-- /BOX -->";
 }
     
 
@@ -206,6 +223,12 @@ function openitaly4wp_plugin_options() {
 	update_option('openitaly4wp_show',$_POST['openitaly4wp_show']);
 	update_option('openitaly4wp_results',intval($_POST['openitaly4wp_results']));
 
+	if($_POST['openitaly4wp_css'] == "1")
+    	    update_option('openitaly4wp_css',"1");
+	else {
+    	    update_option('openitaly4wp_css',"0");
+	}
+
 	echo "<div class=\"updated\"><p><strong>"; 
 	echo __('Options saved.', $openitaly4wp_textdomain );
 	echo "</strong></p></div>";
@@ -219,6 +242,7 @@ function openitaly4wp_plugin_options() {
     $openitaly4wp_type = get_option('openitaly4wp_type');
     $openitaly4wp_title = get_option('openitaly4wp_title');
     $openitaly4wp_show = get_option('openitaly4wp_show');
+    $openitaly4wp_css = get_option('openitaly4wp_css');
     $openitaly4wp_results = intval(get_option('openitaly4wp_results'));
 
     // Include JS
@@ -351,9 +375,14 @@ function openitaly4wp_plugin_options() {
 	<option value='10' ".isSelected($openitaly4wp_results,10).">10</option>
     </select></p>";
 
-   echo "<hr /><p class=\"submit\"><input type=\"submit\" name=\"Submit\" value=\"Salva opzioni\" /></p></form>";
+    echo "<hr /><p>Usare CSS di Openitaly4wp ?</p>";
+    echo "<input type=\"checkbox\" name=\"openitaly4wp_addcss\"";
+    echo (($openitaly4wp_css == "1") ? " checked=\"checked\" " : "" );
+    echo " value=\"1\" /></p>";
 
-   echo "<hr /></div>";
+    echo "<hr /><p class=\"submit\"><input type=\"submit\" name=\"Submit\" value=\"Salva opzioni\" /></p></form>";
+
+    echo "<hr /></div>";
 
 }
 
