@@ -33,4 +33,5 @@ administration page and configure it !
 = 0.0.3 =
 
 * Fixed stupid typo for title
-* 
+* Added support for CSS (to fit in your theme)
+* Cut down utf-8 parser warnings
