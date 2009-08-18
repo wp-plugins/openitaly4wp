@@ -50,13 +50,15 @@ add_option("openitaly4wp_type", '', '', 'yes');
 add_option("openitaly4wp_show", 'random', '', 'yes');
 add_option("openitaly4wp_title", 'Alcune risorse in %COMUNE%', '', 'yes');
 add_option("openitaly4wp_results", '5', '', 'yes');
-add_option("openitaly4wp_css", '', '', 'yes');
+add_option("openitaly4wp_css", '0', '', 'yes');
 
 add_action('admin_menu', 'openitaly4wp_plugin_menu');
 add_action('plugins_loaded', 'openitaly4wp_widget_init');
+
 // WP Actions  
-if(get_option('openitaly4wp_css') == "1")   
+if(get_option('openitaly4wp_css') == "1")  {
     add_action('wp_head','openitaly4wp_css');
+}
 
 function openitaly4wp_widget_init() {
   register_sidebar_widget('openitaly4wp', 'openitaly4wp_widget');
@@ -294,7 +296,7 @@ function openitaly4wp_plugin_options() {
 
     echo "<div class='wrap'>";
     echo "<h2>Openitaly4WP</h2>";
-    echo "<p>v0.0.2 &copy; <a href=\"http://www.zerozone.it\">Michele Pinassi</a></p>";
+    echo "<p>v0.0.3 &copy; <a href=\"http://www.zerozone.it\">Michele Pinassi</a></p>";
 
     // options form
 
@@ -376,9 +378,12 @@ function openitaly4wp_plugin_options() {
     </select></p>";
 
     echo "<hr /><p>Usare CSS di Openitaly4wp ?</p>";
-    echo "<input type=\"checkbox\" name=\"openitaly4wp_addcss\"";
+    echo "<input type=\"checkbox\" name=\"openitaly4wp_css\"";
     echo (($openitaly4wp_css == "1") ? " checked=\"checked\" " : "" );
     echo " value=\"1\" /></p>";
+    
+    echo "<p>Il CSS di Openitaly4wp:</p>";
+    echo "<textarea name='openitaly4wp_cssfile' readonly>".readfile(get_bloginfo('wpurl') .'/wp-content/plugins/openitaly4wp/openitaly4wp.css')."</textarea>";
 
     echo "<hr /><p class=\"submit\"><input type=\"submit\" name=\"Submit\" value=\"Salva opzioni\" /></p></form>";
 
