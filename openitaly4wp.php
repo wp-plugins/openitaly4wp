@@ -2,18 +2,18 @@
 /**
  * @package OpenItaly4WP
  * @author Michele Pinassi
- * @version 0.0.3
+ * @version 0.0.4
  */
 /*
 Plugin Name: Openitaly4WP
 Plugin URI: http://www.openitaly.net/wp
 Description: This plugin allows to display latest, preferred, localized resources from OpenItaly.net
 Author: Michele Pinassi
-Version: 0.0.3
+Version: 0.0.4
 Author URI: http://www.zerozone.it
 */
 
-include('IXR_Library.inc.php');
+include 'IXR_Library.inc.php';
 
 function stripallslashes($string) {
     while(strchr($string,'\\')) {
@@ -51,9 +51,15 @@ add_option("openitaly4wp_show", 'random', '', 'yes');
 add_option("openitaly4wp_title", 'Alcune risorse in %COMUNE%', '', 'yes');
 add_option("openitaly4wp_results", '5', '', 'yes');
 add_option("openitaly4wp_css", '0', '', 'yes');
+add_option("openitaly4wp_csstitle", 'openitaly4wp-title', '', 'yes');
+add_option("openitaly4wp_csssidebar", 'openitaly4wp-box', '', 'yes');
 
 add_action('admin_menu', 'openitaly4wp_plugin_menu');
 add_action('plugins_loaded', 'openitaly4wp_widget_init');
+
+function openitaly4wp_version() {
+    return "0.0.4";
+}
 
 // WP Actions  
 if(get_option('openitaly4wp_css') == "1")  {
@@ -79,7 +85,7 @@ function openitaly4wp_plugin_menu() {
 }
 
 function openitaly4wp_itemdiv($xmlItem) {
-    echo "<div style='openitaly4wp-item'>";
+    echo "<div class='openitaly4wp-item'>";
     if($xmlItem->class == "EVENT") {    
         echo "<img src='".openitaly4wp_path("img/iconEvent.png")."' style='width:12px; height:12px; vertical-align: middle;'>";
     } else if($xmlItem->class == "GENERAL") {   
@@ -111,12 +117,14 @@ function openitaly4wp_widget($args) {
     $password = get_option('openitaly4wp_password');
     $show = get_option('openitaly4wp_show');
     $results = get_option('openitaly4wp_results');
+    $csstitle = get_option('openitaly4wp_csstitle');
+    $csssidebar = get_option('openitaly4wp_csssidebar');
 
     $title = str_ireplace(array('%COMUNE%','%PROVINCIA%','%REGIONE%','%USERNAME%'),array($comune,$provincia,$regione,$username),$title);
 
-    echo "<div class='openitaly4wp-box'><!-- BOX -->";
+    echo "<div class='$csssidebar'><!-- BOX -->";
 
-    echo "<div class='openitaly4wp-title'>$title</div>";
+    echo "<div class='$csstitle'>$title</div>";
 
     $query[] = "regione:$regione";
     if(strlen($provincia) > 0) {
@@ -133,7 +141,7 @@ function openitaly4wp_widget($args) {
     
     $client = new IXR_Client('http://www.openitaly.net/xmlrpc');
     $client->debug = false;
-    if($client->query('oi.getInfo', '','openitaly4wp','0.0.3',get_option('blogname'))) {
+    if($client->query('oi.getInfo', '','openitaly4wp',openitaly4wp_version(),get_option('blogname'))) {
 	$xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
 	$sessId = (string)$xmlData->id;
     }
@@ -202,12 +210,14 @@ function openitaly4wp_widget($args) {
     }   
     error_reporting(E_ERROR | E_WARNING | E_PARSE);
 
-    echo "<div style='openitaly4wp-footer'><small><a href='http://www.openitaly.net/wp'><b>Openitaly4WP</b></a> v0.0.1 - Powered by <a href='http://www.openitaly.net' target=_new><img src='".openitaly4wp_path("img/iconLogo.png")."' style='vertical-align: middle; border: 0px;'>&nbsp;Openitaly.net</a></small></div>";
+    echo "<div class='openitaly4wp-footer'><small><a href='http://www.openitaly.net/wp'><b>Openitaly4WP</b></a> v".openitaly4wp_version()." - Powered by <a href='http://www.openitaly.net' target=_new><img src='".openitaly4wp_path("img/iconLogo.png")."' style='vertical-align: middle; border: 0px;'>&nbsp;Openitaly.net</a></small></div>";
     echo "</div><!-- /BOX -->";
 }
     
 
 function openitaly4wp_plugin_options() {
+
+  include 'comuni.php';
   
   load_plugin_textdomain($openitaly4wp_textdomain,
      PLUGINDIR . '/' . dirname(plugin_basename(__FILE__)),
@@ -231,6 +241,9 @@ function openitaly4wp_plugin_options() {
     	    update_option('openitaly4wp_css',"0");
 	}
 
+	update_option('openitaly4wp_csstitle',$_POST['openitaly4wp_csstitle']);
+	update_option('openitaly4wp_csssidebar',$_POST['openitaly4wp_csssidebar']);
+
 	echo "<div class=\"updated\"><p><strong>"; 
 	echo __('Options saved.', $openitaly4wp_textdomain );
 	echo "</strong></p></div>";
@@ -245,6 +258,8 @@ function openitaly4wp_plugin_options() {
     $openitaly4wp_title = get_option('openitaly4wp_title');
     $openitaly4wp_show = get_option('openitaly4wp_show');
     $openitaly4wp_css = get_option('openitaly4wp_css');
+    $openitaly4wp_csstitle = get_option('openitaly4wp_csstitle');
+    $openitaly4wp_csssidebar = get_option('openitaly4wp_csssidebar');
     $openitaly4wp_results = intval(get_option('openitaly4wp_results'));
 
     // Include JS
@@ -296,13 +311,13 @@ function openitaly4wp_plugin_options() {
 
     echo "<div class='wrap'>";
     echo "<h2>Openitaly4WP</h2>";
-    echo "<p>v0.0.3 &copy; <a href=\"http://www.zerozone.it\">Michele Pinassi</a></p>";
+    echo "<p>v".openitaly4wp_version()." &copy; <a href=\"http://www.zerozone.it\">Michele Pinassi</a></p>";
 
     // options form
 
     echo "<form name=\"form1\" method=\"post\" action=\"".str_replace( '%7E', '~', $_SERVER['REQUEST_URI']). "\">";
 
-    echo "<hr /><p>Titolo del widget. Puoi impostare %COMUNE%,%PROVINCIA%,%REGIONE%,%USERNAME% nel campo titolo.</p>
+    echo "<hr /><p>Titolo del widget. Puoi impostare %COMUNE%,%PROVINCIA%,%REGIONE%,%USERNAME% ed inserire tag HTML.</p>
     <p>Titolo: <input type=\"text\" size=\"32\" name=\"openitaly4wp_title\" value=\"$openitaly4wp_title\" /></p>";
 
     echo "<hr /><p>Contenuti del widget. Cosa vuoi visualizzare ?</p>
@@ -345,12 +360,24 @@ function openitaly4wp_plugin_options() {
 	<option value='Valle Aosta'>Valle d'Aosta</option>
 	<option value='Veneto'>Veneto</option>
     </select></p>
-    <p>Provincia:<div id='divProvincia'><select name='openitaly4wp_provincia'>
-	<option value='$openitaly4wp_provincia'>$openitaly4wp_provincia</option>
-    </select></div></p>
-    <p>Comune<div id='divComune'><select name='openitaly4wp_comune'>
-	<option value='$openitaly4wp_comune'>$openitaly4wp_comune</option>
-    </select></div></p>
+    <p>Provincia:<div id='divProvincia'><select name='openitaly4wp_provincia' onChange=\"ajaxViewComuni('$openitaly4wp_regione',this[this.selectedIndex].value,'#divComune');\">";
+    if(strlen($openitaly4wp_provincia) > 0) {
+	foreach($italyDb[$openitaly4wp_regione] as $provId => $value) {
+	    echo "<option value=\"".$provId."\" ".isSelected($provId,$openitaly4wp_provincia).">$provId</option>";
+	}
+    } else {
+	echo "<option value='$openitaly4wp_provincia'>$openitaly4wp_provincia</option>";
+    }
+    echo "</select></div></p>
+    <p>Comune<div id='divComune'><select name='openitaly4wp_comune'>";
+    if(strlen($openitaly4wp_comune) > 0) {
+	foreach($italyDb[$openitaly4wp_regione][$openitaly4wp_provincia] as $value => $comId) {
+	    echo "<option value=\"".$comId."\" ".isSelected($comId,$openitaly4wp_comune).">$comId</option>";
+	}
+    } else {
+	echo "<option value='$openitaly4wp_comune'>$openitaly4wp_comune</option>";
+    }
+    echo "</select></div></p>
     <div id='loading' style='display: none;'>
 	<img src='".openitaly4wp_path("img/spinner.gif")."' style='width:12px; height:12px; vertical-align: middle;'>&nbsp;Please wait, loading data...
     </div>";
@@ -381,14 +408,13 @@ function openitaly4wp_plugin_options() {
     echo "<input type=\"checkbox\" name=\"openitaly4wp_css\"";
     echo (($openitaly4wp_css == "1") ? " checked=\"checked\" " : "" );
     echo " value=\"1\" /></p>";
-    
-    echo "<p>Il CSS di Openitaly4wp:</p>";
-    echo "<textarea name='openitaly4wp_cssfile' readonly>".readfile(get_bloginfo('wpurl') .'/wp-content/plugins/openitaly4wp/openitaly4wp.css')."</textarea>";
 
+    echo "<p>Classe CSS del Titolo ? Specifica l'eventuale css del tuo tema per i titoli dei widgets</p><p><input type=\"text\" size=\"128\" name=\"openitaly4wp_csstitle\" value=\"$openitaly4wp_csstitle\" /></p>";
+    echo "<p>Classe CSS della Box ? Specifica l'eventuale css del tuo tema per i widgets</p><p><input type=\"text\" size=\"128\" name=\"openitaly4wp_csssidebar\" value=\"$openitaly4wp_csssidebar\" /></p>";
+    
     echo "<hr /><p class=\"submit\"><input type=\"submit\" name=\"Submit\" value=\"Salva opzioni\" /></p></form>";
 
     echo "<hr /></div>";
-
 }
 
 ?>

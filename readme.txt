@@ -36,3 +36,7 @@ administration page and configure it !
 * Added support for CSS (to fit in your theme)
 * Cut down utf-8 parser warnings
 
+= 0.0.4 =
+
+* Added more CSS options to customize aspect of the widget
+* Fixed place select bug that don't allow to change provincia/comune
