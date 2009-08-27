@@ -2,14 +2,14 @@
 /**
  * @package OpenItaly4WP
  * @author Michele Pinassi
- * @version 0.0.4
+ * @version 0.0.5
  */
 /*
 Plugin Name: Openitaly4WP
 Plugin URI: http://www.openitaly.net/wp
 Description: This plugin allows to display latest, preferred, localized resources from OpenItaly.net
 Author: Michele Pinassi
-Version: 0.0.4
+Version: 0.0.5
 Author URI: http://www.zerozone.it
 */
 
@@ -58,7 +58,7 @@ add_action('admin_menu', 'openitaly4wp_plugin_menu');
 add_action('plugins_loaded', 'openitaly4wp_widget_init');
 
 function openitaly4wp_version() {
-    return "0.0.4";
+    return "0.0.5";
 }
 
 // WP Actions  
@@ -181,10 +181,35 @@ function openitaly4wp_widget($args) {
 	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
 	    if(($xmlData)&&(intval((string)$xmlData->code) == 201)) {
 		// Now retrieve preferred
-		$query = $client->query('oi.getBookmarks',$sessId);
+		$query = $client->query('oi.getBookmarks',$sessId,'');
 		if($query) {
 	    	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
+	    	    echo "<!-- ".$xmlData->value." -->";
 		    foreach($xmlData->entry as $xmlItem) {
+			openitaly4wp_itemdiv($xmlItem);
+		    }
+		} else {
+		    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
+		}
+	    } else {
+		print "Errore autenticazione";
+	    }	
+	} else {
+	    print "Errore: ".$client->getErrorCode()." : ".$client->getErrorMessage();
+	}
+    } else if($show == 'myopinions') {
+	// Login and show data
+	$query = $client->query('oi.doLogin',$sessId,$username,$password);
+	if($query) {
+	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
+	    if(($xmlData)&&(intval((string)$xmlData->code) == 201)) {
+		// Now retrieve preferred
+		$query = $client->query('oi.getLastOpinions',$sessId,$results,$username);
+		if($query) {
+	    	    $xmlData = simplexml_load_string(fiXML(html_entity_decode($client->getResponse())));
+	    	    echo "<!-- ".$xmlData->value." -->";
+		    foreach($xmlData->opinion as $xmlItem) {
+			echo "<div class='openitaly4wp-comment'>\"".$xmlItem->message."\"</div> ha detto <strong>".$xmlItem->userId."</strong> approposito di ";
 			openitaly4wp_itemdiv($xmlItem);
 		    }
 		} else {
@@ -326,6 +351,7 @@ function openitaly4wp_plugin_options() {
 	<option value='topten' ".isSelected($openitaly4wp_show,"topten").">Classifica TopTen</option>
 	<option value='lastadd' ".isSelected($openitaly4wp_show,"lastadd").">Ultime aggiunte</option>
 	<option value='bookmark' ".isSelected($openitaly4wp_show,"bookmark").">I miei preferiti</option>
+	<option value='myopinions' ".isSelected($openitaly4wp_show,"myopinions").">Le mie recensioni</option>
     </select></p>";
     
     echo "<hr /><p>Nome utente e password dell'account di openitaly.net: necessarie solamente se vuoi far vedere le tue risorse preferite.</p>

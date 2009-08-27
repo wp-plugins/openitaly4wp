@@ -39,4 +39,8 @@ administration page and configure it !
 = 0.0.4 =
 
 * Added more CSS options to customize aspect of the widget
-* Fixed place select bug that don't allow to change provincia/comune
+
+= 0.0.5 =
+
+* Added support for user opinions and fix a bug on user bookmarks
+* Sync'ed regioni, provincie e comuni from openitaly.net

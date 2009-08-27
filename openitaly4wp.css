@@ -16,3 +16,17 @@ div.openitaly4wp-footer {
 div.openitaly4wp-item {
     padding: 2px;
 }
+
+.openitaly4wp-comment {
+    margin: 0 5px 5px 5px;
+    text-align: justify;
+    font-style: italic;
+}
+
+.openitaly4wp-comment:first-letter {
+    font-size: 1.5em;
+    font-style: italic;
+    float: left;
+    margin: 0 5px 5px -5px;
+    padding: 5px 5px 5px 5px;
+}
