@@ -3,7 +3,7 @@ Contributors: o-zone
 Tags: openitaly, touristic, italian, italy, restaurants, hotel, travels,
 Stable tag: trunk
 Requires at least: 2.0
-Tested up to: 2.8.4
+Tested up to: 3.0.1
 
 openitaly4wp show a widget with Italian touristic resources.
 
@@ -39,3 +39,11 @@ administration page and configure it !
 = 0.0.4 =
 
 * Added more CSS options to customize aspect of the widget
+
+= 0.0.5 =
+
+* Some bugs fixed
+
+= 0.0.6 =
+
+* Fixes for WP 3.0.x trunks
